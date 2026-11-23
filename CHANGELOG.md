@@ -2,6 +2,16 @@
 
 All notable changes are recorded here, newest first, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) style; versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+
+- `scripts/preview-popup.js`: render the real popup with your own configuration on an address you name, print each button with the address it opens and any setting it could not use, and save a picture of the popup at the size Chrome gives it.
+
+### Changed
+
+- The real-Chrome plumbing (serving the extension's files, starting headless Chrome, the stand-ins for the Chrome APIs) moved into `scripts/cdp.js`, shared by the check and the preview. The check itself is unchanged and still passes all 17 checks.
+
 ## 2.0.0 - 2026-11-22
 
 Drive Pages Button began as one organisation's toolbar button, with that organisation's page addresses written into its code (the 1.x line, never published). Version 2.0.0 is the first public release, and it carries nothing about any one organisation. The buttons, their labels and the addresses they open come from the organisation's Chrome policy, or from the person's own options page when no policy sets them. One package can therefore serve any organisation that keeps its pages in its own place and wants them one click from the Google Drive folder or file in front of its people. It was submitted to the Chrome Web Store on 2026-11-22.

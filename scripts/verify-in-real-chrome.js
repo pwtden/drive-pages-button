@@ -8,122 +8,37 @@
 // The manifest is checked by buttons.test.js and by the Chrome Web Store when the package is uploaded.
 //
 //   bun scripts/verify-in-real-chrome.js [--chrome <path>]   # exit 0 every check passed · 1 a check failed · 2 could not look
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { DEFAULT_CHROME, startChrome } from "./cdp.js";
 
-const { values: args } = parseArgs({
-  options: { chrome: { type: "string", default: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" } },
-  strict: true,
-});
+const { values: args } = parseArgs({ options: { chrome: { type: "string", default: DEFAULT_CHROME } }, strict: true });
 const DIR = resolve(import.meta.dir, "../extension");
 const EXAMPLE = JSON.parse(readFileSync(resolve(import.meta.dir, "../examples/example-config.json"), "utf8"));
 const FOLDER = "1MADEUPFOLDERID0000";
 const FILE = "1MADEUPDOCUMENTID000";
-const TYPES = { js: "text/javascript", html: "text/html", json: "application/json", png: "image/png" };
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-/** One CDP connection to one page: send a command, await its answer. */
-function connect(wsUrl) {
-  const ws = new WebSocket(wsUrl);
-  let id = 0;
-  const waiting = new Map();
-  ws.addEventListener("message", (m) => {
-    const msg = JSON.parse(String(m.data));
-    const w = waiting.get(msg.id);
-    if (!w) return;
-    waiting.delete(msg.id);
-    if (msg.error) w.reject(new Error(msg.error.message));
-    else w.resolve(msg.result);
-  });
-  const send = (method, params = {}) =>
-    new Promise((resolveSend, reject) => {
-      id += 1;
-      waiting.set(id, { resolve: resolveSend, reject });
-      ws.send(JSON.stringify({ id, method, params }));
-    });
-  return new Promise((ok, fail) => {
-    ws.addEventListener("open", () => ok({ send, close: () => ws.close() }));
-    ws.addEventListener("error", () => fail(new Error("could not connect to Chrome")));
-  });
-}
 
 async function main() {
-  const server = Bun.serve({
-    port: 0,
-    hostname: "127.0.0.1",
-    fetch: async (req) => {
-      const name = new URL(req.url).pathname.slice(1);
-      if (!/^[\w./-]+$/.test(name) || name.includes("..")) return new Response("no", { status: 404 });
-      const f = Bun.file(join(DIR, name));
-      if (!(await f.exists())) return new Response("no", { status: 404 });
-      return new Response(f, { headers: { "content-type": TYPES[name.split(".").pop()] ?? "application/octet-stream" } });
-    },
-  });
-  const profile = mkdtempSync(join(tmpdir(), "drive-pages-button-"));
-  const chrome = Bun.spawn(
-    [
-      args.chrome,
-      "--headless=new",
-      "--remote-debugging-port=0",
-      `--user-data-dir=${profile}`,
-      "--no-first-run",
-      "--no-default-browser-check",
-      "about:blank",
-    ],
-    { stdout: "ignore", stderr: "ignore" },
-  );
   const failures = [];
   const check = (ok, what) => {
     console.log(`${ok ? "  ✓" : "  ✗"} ${what}`);
     if (!ok) failures.push(what);
   };
+  let h;
   try {
-    let port;
-    for (let i = 0; i < 100 && !port; i += 1) {
-      try {
-        port = readFileSync(join(profile, "DevToolsActivePort"), "utf8").split("\n")[0];
-      } catch {
-        await sleep(100);
-      }
-    }
-    if (!port) {
-      console.error("✗ could not look: Chrome did not start (no DevToolsActivePort)");
-      return 2;
-    }
-    const target = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: "PUT" })).json();
-    const page = await connect(target.webSocketDebuggerUrl);
-    await page.send("Page.enable");
-    await page.send("Runtime.enable");
-    const evaluate = async (expression) =>
-      (await page.send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true })).result.value;
-    const until = async (expression, what) => {
-      for (let i = 0; i < 100; i += 1) {
-        if (await evaluate(expression)) return true;
-        await sleep(100);
-      }
-      check(false, `timed out waiting for ${what}`);
-      return false;
-    };
-
-    /** Open one of the extension's pages with the Chrome APIs stood in for. */
-    const open = async (file, { tab, managed = {}, own } = {}) => {
-      const stub = `window.__opened = []; window.__saved = []; window.__options = 0; window.close = () => { window.__closed = true; };
-        window.chrome = {
-          tabs: { query: async () => [{ url: ${JSON.stringify(tab ?? "about:blank")} }], create: async (o) => { window.__opened.push(o.url); } },
-          storage: {
-            managed: { get: async () => (${JSON.stringify(managed)}) },
-            sync: { get: async () => (${JSON.stringify(own === undefined ? {} : { config: own })}), set: async (o) => { window.__saved.push(o); } },
-          },
-          runtime: { openOptionsPage: () => { window.__options += 1; } },
-        };`;
-      const { identifier } = await page.send("Page.addScriptToEvaluateOnNewDocument", { source: stub });
-      await page.send("Page.navigate", { url: `http://127.0.0.1:${server.port}/${file}` });
-      await sleep(150);
-      await until(`document.readyState === "complete"`, `${file} to load`);
-      await page.send("Page.removeScriptToEvaluateOnNewDocument", { identifier });
-    };
+    h = await startChrome(DIR, args.chrome);
+  } catch (e) {
+    console.error(`✗ could not look: ${e.message}`);
+    return 2;
+  }
+  const { page, evaluate, open } = h;
+  const until = async (expression, what) => {
+    if (await h.until(expression)) return true;
+    check(false, `timed out waiting for ${what}`);
+    return false;
+  };
+  try {
     const labels = `[...document.querySelectorAll("#buttons button")].map((b) => b.textContent)`;
 
     console.log("▶ popup, configured by policy, on a Drive folder");
@@ -213,10 +128,7 @@ async function main() {
     console.error(`✗ could not look: ${e.message}`);
     return 2;
   } finally {
-    chrome.kill();
-    await chrome.exited;
-    server.stop(true);
-    rmSync(profile, { recursive: true, force: true });
+    await h.stop();
   }
   console.log(failures.length ? `✗ ${failures.length} check(s) failed` : "✓ every check passed in real Chrome");
   return failures.length ? 1 : 0;
