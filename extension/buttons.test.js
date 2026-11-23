@@ -68,6 +68,40 @@ describe("buttonProblem: what makes one configured button unusable", () => {
   });
 });
 
+const manifestForTabs = JSON.parse(readFileSync(join(import.meta.dir, "manifest.json"), "utf8"));
+describe("tab: where a button opens its page", () => {
+  test("new by default, same when asked, anything else is unusable and named", () => {
+    const c = readConfig({
+      buttons: [
+        { label: "A", url: "https://a.example.com/" },
+        { label: "B", url: "https://b.example.com/", tab: "same" },
+        { label: "C", url: "https://c.example.com/", tab: "here" },
+      ],
+    });
+    expect(c.buttons.map((b) => [b.label, b.tab])).toEqual([
+      ["A", "new"],
+      ["B", "same"],
+    ]);
+    expect(c.problems).toEqual(['button 3: "tab" must be "new" or "same"']);
+  });
+  test("buttonsFor carries each button's tab", () => {
+    const c = readConfig({
+      buttons: [
+        { label: "E", when: "file", url: "https://p.example.com/edit?file={fileId}", tab: "same" },
+        { label: "H", url: "https://p.example.com/" },
+      ],
+    });
+    expect(buttonsFor(c, `https://docs.google.com/document/d/${D}/edit`).map((b) => [b.label, b.tab])).toEqual([
+      ["E", "same"],
+      ["H", "new"],
+    ]);
+  });
+  test("the manifest suggests a shortcut that opens the popup, and asks for no new permission", () => {
+    expect(manifestForTabs.commands._execute_action.suggested_key.default).toBe("Alt+Shift+D");
+    expect(manifestForTabs.permissions).toEqual(["activeTab", "storage"]);
+  });
+});
+
 describe("readConfig: what the popup can use", () => {
   test("the example configuration is fully usable", () => {
     const c = readConfig(example);
@@ -148,7 +182,7 @@ describe("the package: manifest, schema and files agree", () => {
   });
   test("the policy schema names exactly the settings readConfig reads", () => {
     expect(Object.keys(schema.properties).toSorted()).toEqual(["buttons", "note", "title"]);
-    expect(Object.keys(schema.properties.buttons.items.properties).toSorted()).toEqual(["label", "url", "when"]);
+    expect(Object.keys(schema.properties.buttons.items.properties).toSorted()).toEqual(["label", "tab", "url", "when"]);
     expect(Object.keys(WHEN).toSorted()).toEqual(["always", "file", "folder"]);
   });
 });

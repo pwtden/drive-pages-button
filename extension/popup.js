@@ -1,6 +1,8 @@
 // The popup: reads the address of the tab the person is on (the activeTab permission, granted only when they click the
-// button) and lists the configured buttons that fit it. Each opens its page in a new tab. The organisation's Chrome
-// policy wins; without one, the person's own configuration from the options page is used.
+// button) and lists the configured buttons that fit it. Each opens its page in a new tab, or in the tab the person is on
+// when the button says "tab": "same". The organisation's Chrome policy wins; without one, the person's own configuration
+// from the options page is used. Keyboard: the popup opens with Alt+Shift+D (the manifest's suggested shortcut), the
+// first button has the focus (Enter presses it), and the digits 1 to 9 press the button of that number.
 import { buttonsFor, readConfig } from "./buttons.js";
 
 const $ = (id) => document.getElementById(id);
@@ -19,11 +21,21 @@ for (const c of shown) {
   b.type = "button";
   b.textContent = c.label;
   b.addEventListener("click", async () => {
-    await chrome.tabs.create({ url: c.href });
+    if (c.tab === "same" && tab?.id !== undefined) await chrome.tabs.update(tab.id, { url: c.href });
+    else await chrome.tabs.create({ url: c.href });
     window.close();
   });
   $("buttons").append(b);
 }
+const pressable = [...$("buttons").querySelectorAll("button")];
+pressable[0]?.focus();
+document.addEventListener("keydown", (e) => {
+  const n = /^[1-9]$/.test(e.key) ? Number(e.key) : 0;
+  if (n && pressable[n - 1] && !e.altKey && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+    pressable[n - 1].click();
+  }
+});
 
 if (config.buttons.length === 0) {
   $("warn").textContent = fromPolicy

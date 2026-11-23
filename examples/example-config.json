@@ -4,7 +4,7 @@
   "buttons": [
     { "label": "Upload files to this folder", "when": "folder", "url": "https://pages.example.com/upload?folder={folderId}" },
     { "label": "Make a new document in this folder", "when": "folder", "url": "https://pages.example.com/new?folder={folderId}" },
-    { "label": "Edit this file", "when": "file", "url": "https://pages.example.com/edit?file={fileId}" },
+    { "label": "Edit this file", "when": "file", "url": "https://pages.example.com/edit?file={fileId}", "tab": "same" },
     { "label": "Copy this file into a folder", "when": "file", "url": "https://pages.example.com/copy?file={fileId}" },
     { "label": "All our pages", "when": "always", "url": "https://pages.example.com/" }
   ]
