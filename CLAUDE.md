@@ -10,6 +10,7 @@ A Manifest V3 Chrome extension: buttons, configured by the organisation's Chrome
 | Real Chrome (popup and options page) | `moon run extension:chrome-check` |
 | Preview a configuration's popup | `bun scripts/preview-popup.js --config <file> --tab <address> [--out popup.png] [--own]` |
 | Package for the Chrome Web Store | `moon run extension:package` |
+| Publish a version to the Chrome Web Store (API v2, a keyless service account) | `bun scripts/web-store.js release --zip dist/drive-pages-button-<version>.zip --sha256 <hex>`; `status` to see what the store holds |
 
 ## Where things live
 
@@ -25,4 +26,5 @@ A Manifest V3 Chrome extension: buttons, configured by the organisation's Chrome
 - **Nothing about any one organisation in the code:** every address and label comes from configuration. An organisation's own configuration lives in that organisation's repository, never here.
 - **Two permissions only:** `activeTab` and `storage`. A change that needs more is a decision (an ADR), because every organisation's administrator has to accept it.
 - **Only https addresses**, and an id is URL-encoded before it reaches one.
+- **No publisher in the repository:** `scripts/web-store.js` takes the publisher id, the item id, the service account and the gcloud login from flags or `CWS_*` environment variables, and a unit test fails if the script names an account or an id.
 - **Released as a single unit** with semantic-release when the repository goes public (version 2.0.0, the successor of a single-organisation 1.x).
