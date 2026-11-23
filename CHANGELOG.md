@@ -6,7 +6,7 @@ All notable changes are recorded here, newest first, in the [Keep a Changelog](h
 
 ### Added
 
-- `scripts/web-store.js`: publish a version to the Chrome Web Store through its API (v2) as a service account with no key, whose token gcloud mints by impersonation. `status` shows the published version and the one in review (`--published <version>` exits 0 only once that version is live). `release` checks the zip's SHA-256 and manifest version, does nothing when that version is already submitted or published, uploads, waits for the store to process it and submits it for review. `submit` submits the last upload. The publisher, the item, the service account and the gcloud login come from flags or `CWS_*` environment variables, never from the repository. It changes nothing in the extension itself.
+- `scripts/web-store.js`: publish a version to the Chrome Web Store through its API (v2) as a service account with no key, whose token gcloud mints by impersonation. `status` shows the published version and the one in review (`--published <version>` exits 0 only once that version's state is PUBLISHED). `release` checks the zip's SHA-256 and manifest version, does nothing when that version is already submitted or published, uploads, waits for the store to process it and submits it for review. There is deliberately no separate submit: re-running `release` finishes a release whose submission failed, while a bare submit could put a version that is already published back into review. The publisher, the item, the service account and the gcloud login come from flags or `CWS_*` environment variables, never from the repository. It changes nothing in the extension itself.
 
 ## 2.1.0 - 2026-11-23
 

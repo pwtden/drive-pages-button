@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { compareVersions, Exit, plan, resolveSettings, summarize, zipVersion } from "./web-store.js";
+import { checkFlags, compareVersions, Exit, maskNames, plan, resolveSettings, summarize, zipVersion } from "./web-store.js";
 
 const ids = { publisher: "pub-1", item: "abcdefghijklmnop", "service-account": "robot@project.iam.gserviceaccount.com" };
 
@@ -104,4 +104,26 @@ test("the script names no publisher, account or item (the repository is public)"
   expect(source).not.toMatch(/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z.]+/);
   expect(source).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/);
   expect(source).not.toMatch(/\b[a-p]{32}\b/);
+});
+
+describe("checkFlags", () => {
+  test("a command refuses the other command's flags", () => {
+    expect(() => checkFlags("status", { "dry-run": true, zip: "f.zip" })).toThrow("status does not take --zip, --dry-run");
+    expect(() => checkFlags("status", { staged: true })).toThrow("status does not take --staged");
+    expect(() => checkFlags("release", { published: "2.1.0" })).toThrow("release does not take --published");
+  });
+  test("an empty value is refused instead of turning its check off", () => {
+    expect(() => checkFlags("status", { published: "" })).toThrow("--published is empty");
+    expect(() => checkFlags("release", { zip: "f.zip", sha256: " " })).toThrow("--sha256 is empty");
+  });
+  test("each command takes its own flags", () => {
+    expect(() => checkFlags("status", { published: "2.1.0", raw: true })).not.toThrow();
+    expect(() => checkFlags("release", { zip: "f.zip", sha256: "ab", "wait-linked": "5", staged: true, "dry-run": true })).not.toThrow();
+  });
+});
+
+test("maskNames hides the service account and the login in gcloud's errors", () => {
+  const line = "ERROR: Error 403 (Forbidden) - failed to impersonate [robot@project.iam.gserviceaccount.com]. Login: me@example.com";
+  expect(maskNames(line)).toBe("ERROR: Error 403 (Forbidden) - failed to impersonate […]. Login: <account>");
+  expect(maskNames("Your current active account [me@example.com] does not have any valid credentials")).not.toContain("example");
 });

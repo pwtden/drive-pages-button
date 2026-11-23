@@ -6,10 +6,9 @@
 //
 //   bun scripts/web-store.js status  [--published <version>] [--raw]
 //   bun scripts/web-store.js release --zip <file> [--sha256 <hex>] [--wait-linked <minutes>] [--staged] [--dry-run]
-//   bun scripts/web-store.js submit  [--staged]
 //
 //   status   what the store holds: the published version and state, and the one submitted for review
-//            --published <v>  exit 0 only when version v is the published one (4 while it is not yet)
+//            --published <v>  exit 0 only when version v is published (state PUBLISHED), 4 while it is not yet
 //            --raw            print the API's answer as it is
 //   release  check the zip, upload it, wait until the store has processed it, and submit it for review. Does nothing
 //            when the zip's version is already submitted or published, and refuses a version not above the published one
@@ -18,7 +17,8 @@
 //                                  it was linked in the Developer Dashboard); default 0, ask once
 //            --staged              on approval, hold the version for you to publish instead of publishing it at once
 //            --dry-run             check and print the plan; upload and submit nothing
-//   submit   submit what was uploaded last (when an upload succeeded but the submission did not)
+//   A flag the other command takes, or an empty value, is refused (exit 2). There is no separate submit: when an upload
+//   succeeded but its submission did not, run release again (the version is neither submitted nor published yet).
 //
 //   --publisher        or CWS_PUBLISHER_ID     the publisher id (Developer Dashboard › Account)
 //   --item             or CWS_ITEM_ID          the item id, the extension's id in the store
@@ -109,6 +109,27 @@ export function plan(summary, version) {
   return { action: "upload", why: newest ? `${version} replaces the published ${newest}` : `${version} is the first version` };
 }
 
+const RELEASE_ONLY = ["zip", "sha256", "wait-linked", "dry-run"];
+const STATUS_ONLY = ["published", "raw"];
+
+/**
+ * Refuses a flag the command does not use and an empty value, which would turn its check off (an unset shell variable
+ * in `--published "$V"` or `--sha256 "$H"`). Throws Exit 2.
+ */
+export function checkFlags(command, values) {
+  for (const [key, value] of Object.entries(values)) {
+    if (typeof value === "string" && !value.trim()) throw new Exit(2, `--${key} is empty`);
+  }
+  const notHere = command === "release" ? STATUS_ONLY : [...RELEASE_ONLY, "staged"];
+  const stray = notHere.filter((key) => values[key] !== undefined && values[key] !== false);
+  if (stray.length) throw new Exit(2, `${command} does not take ${stray.map((key) => `--${key}`).join(", ")}`);
+}
+
+/** gcloud's error lines name the service account and the login, in brackets or bare: masks both, since such a line may be pasted in public. */
+export function maskNames(line) {
+  return line.replace(/\[[^\]]*\]/g, "[…]").replace(/[\w.+-]+@[\w.-]+/g, "<account>");
+}
+
 /** The manifest's version inside a zip, read with unzip. */
 export function zipVersion(zip) {
   const r = Bun.spawnSync(["unzip", "-p", zip, "manifest.json"], { stdout: "pipe", stderr: "pipe", timeout: 30_000 });
@@ -141,6 +162,7 @@ function token(settings) {
       .split("\n")
       .filter((l) => l.trim() && !/impersonation/i.test(l))
       .slice(-2)
+      .map(maskNames)
       .join(" ");
     throw new Exit(2, `no token: gcloud exit ${r.exitCode}${why ? `: ${why}` : ""}`);
   }
@@ -221,11 +243,11 @@ async function release(settings, values) {
     throw new Exit(2, `cannot read ${values.zip}: ${e.code ?? e.message}`);
   }
   const sha256 = createHash("sha256").update(bytes).digest("hex");
-  if (values.sha256 && values.sha256.toLowerCase() !== sha256) {
+  if (values.sha256 !== undefined && values.sha256.trim().toLowerCase() !== sha256) {
     throw new Exit(2, `SHA-256 differs: the zip is ${sha256}, --sha256 says ${values.sha256}`);
   }
   const version = zipVersion(values.zip);
-  say("zip", { file: values.zip, version, sha256, bytes: bytes.length, checked: Boolean(values.sha256) });
+  say("zip", { file: values.zip, version, sha256, bytes: bytes.length, checked: values.sha256 !== undefined });
 
   const waitMinutes = Number(values["wait-linked"] ?? 0);
   if (!Number.isFinite(waitMinutes) || waitMinutes < 0) throw new Exit(2, "--wait-linked takes a number of minutes");
@@ -267,33 +289,30 @@ async function main(argv) {
       "service-account": { type: "string" },
       account: { type: "string" },
       published: { type: "string" },
-      raw: { type: "boolean", default: false },
+      raw: { type: "boolean" },
       zip: { type: "string" },
       sha256: { type: "string" },
       "wait-linked": { type: "string" },
-      staged: { type: "boolean", default: false },
-      "dry-run": { type: "boolean", default: false },
+      staged: { type: "boolean" },
+      "dry-run": { type: "boolean" },
     },
   });
   const command = positionals[0];
-  if (!["status", "release", "submit"].includes(command) || positionals.length > 1) {
-    throw new Exit(2, "usage: bun scripts/web-store.js status|release|submit [flags]; the flags are listed at the top of this file");
+  if (!["status", "release"].includes(command) || positionals.length > 1) {
+    throw new Exit(2, "usage: bun scripts/web-store.js status|release [flags]; the flags are listed at the top of this file");
   }
+  checkFlags(command, values);
   const settings = resolveSettings(values, process.env);
   if (command === "release") return release(settings, values);
 
   const client = makeClient(settings);
-  if (command === "submit") {
-    await readableStatus(client, 0);
-    await submitAndReport(client, Boolean(values.staged));
-    return 0;
-  }
   const s = await readableStatus(client, 0);
   if (values.raw) console.log(JSON.stringify(s, null, 2));
   const summary = summarize(s);
   say("status", summary);
-  if (values.published) return summary.published?.versions.includes(values.published) ? 0 : 4;
-  return 0;
+  if (values.published === undefined) return 0;
+  const live = summary.published?.state === "PUBLISHED" && summary.published.versions.includes(values.published.trim());
+  return live ? 0 : 4;
 }
 
 if (import.meta.main) {
