@@ -1,0 +1,18 @@
+# Claude Code: track ONLY skills (use * not / so negation works)
+.claude/*
+!.claude/skills/
+
+node_modules/
+dist/
+
+# moon
+.moon/cache/
+.moon/docker/
+
+logs/
+*.local.*
+
+# Secrets (never commit)
+.env*
+*.key
+*.pem

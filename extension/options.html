@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drive Pages Button: options</title>
+<style>
+body{font:15px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1f1f1f}
+h1{font-size:20px;margin:0 0 12px}
+p{margin:0 0 12px}
+textarea{width:100%;min-height:22rem;font:13px/1.45 ui-monospace,monospace;box-sizing:border-box;padding:10px}
+textarea[readonly]{background:#f4f4f4}
+button{font:inherit;padding:8px 16px;margin-top:10px;border:1px solid #0b57d0;border-radius:8px;background:#0b57d0;color:#fff;cursor:pointer}
+button[hidden]{display:none}
+#result div{margin:2px 0}
+.err{color:#b3261e}
+code{font-size:13px}
+</style>
+</head>
+<body>
+<h1>Drive Pages Button: options</h1>
+<p id="where"></p>
+<p>The buttons are a JSON object: an optional <code>title</code> and <code>note</code>, and a <code>buttons</code> list. Each button has a <code>label</code>, a <code>when</code> (<code>"folder"</code>, <code>"file"</code> or <code>"always"</code>) and an https <code>url</code>, which may contain <code>{folderId}</code> when <code>"folder"</code> or <code>{fileId}</code> when <code>"file"</code>.</p>
+<textarea id="config" spellcheck="false" aria-label="Configuration (JSON)"></textarea>
+<button id="save" type="button">Save</button>
+<div id="result"></div>
+<script type="module" src="options.js"></script>
+</body>
+</html>

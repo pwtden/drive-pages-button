@@ -1,0 +1,26 @@
+{
+  "type": "object",
+  "properties": {
+    "title": { "type": "string", "title": "Title", "description": "The heading of the popup, at most 60 characters." },
+    "note": { "type": "string", "title": "Note", "description": "One line under the heading, at most 200 characters." },
+    "buttons": {
+      "type": "array",
+      "title": "Buttons",
+      "description": "Shown in this order, at most 20.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string", "description": "What the button says, at most 60 characters." },
+          "when": {
+            "type": "string",
+            "description": "\"folder\" (a Drive folder is open), \"file\" (a Doc, Sheet, Slides, Drawing or Drive file is open) or \"always\"."
+          },
+          "url": {
+            "type": "string",
+            "description": "An https address; it may contain {folderId} when \"folder\" or {fileId} when \"file\"."
+          }
+        }
+      }
+    }
+  }
+}

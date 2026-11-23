@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=https://moonrepo.dev/schemas/workspace.json
+# Explicit project map: one project, the extension.
+projects:
+  extension: "extension"
+
+vcs:
+  client: "git"
+  defaultBranch: "main"

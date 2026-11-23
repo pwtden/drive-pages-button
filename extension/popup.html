@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drive Pages Button</title>
+<style>
+body{font:15px/1.4 system-ui,sans-serif;margin:0;padding:12px;min-width:17rem;color:#1f1f1f}
+h1{font-size:15px;margin:0 0 8px}
+p{margin:0 0 10px;color:#4a5568;font-size:13px}
+p:empty{display:none}
+#warn{color:#b3261e}
+#buttons{display:flex;flex-direction:column;gap:6px}
+button{font:inherit;text-align:left;padding:9px 12px;min-height:40px;border:1px solid #0b57d0;border-radius:8px;background:#fff;color:#0b57d0;cursor:pointer}
+button:hover,button:focus{background:#e8f0fe}
+</style>
+</head>
+<body>
+<h1 id="title">Drive Pages Button</h1>
+<p id="note"></p>
+<p id="warn"></p>
+<div id="buttons"></div>
+<script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+# proto: the only toolchain manager for this repo. `proto use` installs these pins on a fresh machine.
+bun = "1.4.5"
+moon = "2.6.5"

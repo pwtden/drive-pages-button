@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://moonrepo.dev/schemas/project.json
+layer: "application"
+language: "javascript"
+tags: ["lang/js", "layer/extension"]
+
+tasks:
+  lint:
+    script: "bunx --bun biome check ."
+    options: { runFromWorkspaceRoot: true, cache: false }
+  test:
+    script: "bun test extension"
+    options: { runFromWorkspaceRoot: true }
+  package:
+    script: "bash scripts/package.sh"
+    options: { runFromWorkspaceRoot: true, cache: false }
+  check:
+    deps: ["~:lint", "~:test"]
+  chrome-check:
+    script: "bun scripts/verify-in-real-chrome.js"
+    options: { runFromWorkspaceRoot: true, cache: false }
+  store-images:
+    script: "bun scripts/store-images.js"
+    options: { runFromWorkspaceRoot: true, cache: false }
