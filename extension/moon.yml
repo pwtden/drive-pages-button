@@ -8,7 +8,8 @@ tasks:
     script: "bunx --bun biome check ."
     options: { runFromWorkspaceRoot: true, cache: false }
   test:
-    script: "bun test extension"
+    script: "bun test extension scripts"
+    inputs: ["**/*", "/scripts/**/*"]
     options: { runFromWorkspaceRoot: true }
   package:
     script: "bash scripts/package.sh"

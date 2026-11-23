@@ -2,6 +2,12 @@
 
 All notable changes are recorded here, newest first, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) style; versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Added
+
+- `scripts/web-store.js`: publish a version to the Chrome Web Store through its API (v2) as a service account with no key, whose token gcloud mints by impersonation. `status` shows the published version and the one in review (`--published <version>` exits 0 only once that version is live). `release` checks the zip's SHA-256 and manifest version, does nothing when that version is already submitted or published, uploads, waits for the store to process it and submits it for review. `submit` submits the last upload. The publisher, the item, the service account and the gcloud login come from flags or `CWS_*` environment variables, never from the repository. It changes nothing in the extension itself.
+
 ## 2.1.0 - 2026-11-23
 
 Version 2.1.0 is about fewer clicks. An organisation whose pages finish their job by themselves (grant access, make the document, upload the files) and then send the person back to the file or folder can now open those pages in the tab the person is on, so they stay in one tab. The popup can be opened from the keyboard, and its buttons pressed with a key. Nothing new is asked of the browser: the permissions are still `activeTab` and `storage`.

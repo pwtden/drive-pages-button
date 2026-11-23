@@ -60,6 +60,26 @@ bun scripts/preview-popup.js --config <file> --tab <address>   # your configurat
 moon run extension:package         # dist/drive-pages-button-<version>.zip and its SHA-256
 ```
 
+### Publish a version to the Chrome Web Store
+
+`scripts/web-store.js` uses the Chrome Web Store API (v2) as a service account that has no key. Once per publisher:
+
+1. In a Google Cloud project, turn on the Chrome Web Store API and the IAM Service Account Credentials API, create a service account, and give your own gcloud login the Service Account Token Creator role on it. Create no key.
+2. Add the service account in the Developer Dashboard › Settings › Service account (one per publisher). Google offers no API for this step, and the account can read the item about a minute later.
+
+Then, for each version:
+
+```bash
+export CWS_PUBLISHER_ID=<publisher id> CWS_ITEM_ID=<item id> CWS_SERVICE_ACCOUNT=<service account email>
+export CWS_GCLOUD_ACCOUNT=<your gcloud login>   # optional; gcloud's active login otherwise
+bun scripts/web-store.js status                 # the published version and the one in review
+bun scripts/web-store.js release --zip dist/drive-pages-button-<version>.zip --sha256 <hex> --dry-run
+bun scripts/web-store.js release --zip dist/drive-pages-button-<version>.zip --sha256 <hex>
+bun scripts/web-store.js status --published <version>   # exit 0 once Google's review has published it, 4 until then
+```
+
+`release` does nothing when that version is already submitted or published. Each step prints one JSON line, and a token is never printed. Exit codes: 0 done, 1 the store refused or the upload failed, 2 a usage error, a bad zip or no token, 3 the item cannot be read (not linked yet, or a wrong id), and 4 from `status --published` while that version is not published.
+
 ## Licence
 
 MIT, see [LICENSE](LICENSE). The icon is Microsoft's Fluent Emoji "card index dividers", under MIT ([extension/icons/LICENSE-fluent-emoji.txt](extension/icons/LICENSE-fluent-emoji.txt)).
