@@ -27,16 +27,6 @@ for (const c of shown) {
   });
   $("buttons").append(b);
 }
-const pressable = [...$("buttons").querySelectorAll("button")];
-pressable[0]?.focus();
-document.addEventListener("keydown", (e) => {
-  const n = /^[1-9]$/.test(e.key) ? Number(e.key) : 0;
-  if (n && pressable[n - 1] && !e.altKey && !e.ctrlKey && !e.metaKey) {
-    e.preventDefault();
-    pressable[n - 1].click();
-  }
-});
-
 if (config.buttons.length === 0) {
   $("warn").textContent = fromPolicy
     ? "Your organisation's settings for this button have no usable buttons. Please tell whoever looks after your computers."
@@ -51,3 +41,14 @@ if (config.buttons.length === 0) {
 } else if (config.problems.length > 0) {
   $("warn").textContent = `${config.problems.length} setting(s) could not be used; the options page says which.`;
 }
+
+// The keyboard, once every button is in place ("Set it up" included): the first has the focus, a digit presses its own.
+const pressable = [...$("buttons").querySelectorAll("button")];
+pressable[0]?.focus();
+document.addEventListener("keydown", (e) => {
+  const n = /^[1-9]$/.test(e.key) ? Number(e.key) : 0;
+  if (n && pressable[n - 1] && !e.altKey && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+    pressable[n - 1].click();
+  }
+});
