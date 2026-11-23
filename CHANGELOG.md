@@ -11,7 +11,7 @@ Version 2.1.0 is about fewer clicks. An organisation whose pages finish their jo
 - A button may say `"tab": "same"`: its page opens in the tab the person is on (`chrome.tabs.update` on the active tab), instead of a new tab, the default. Any other value leaves the button out with a reason, like every other rule.
 - A keyboard shortcut, Alt+Shift+D, suggested for opening the popup (`_execute_action`); people can change it in Chrome.
 - In the popup the first button has the focus, so Enter presses it, and the digits 1 to 9 press the button of that number, which each button now shows.
-- The policy schema and the options page know `tab`; the unit tests keep the schema equal to what `readConfig` reads (22 tests), and the real-Chrome check covers the focus, the numbers, a digit key and a same-tab button (22 checks).
+- The policy schema and the options page know `tab`; the unit tests keep the schema equal to what `readConfig` reads (22 tests), and the real-Chrome check covers the focus, the numbers, a digit key and a same-tab button (21 checks).
 
 - `scripts/preview-popup.js`: render the real popup with your own configuration on an address you name, print each button with the address it opens and any setting it could not use, and save a picture of the popup at the size Chrome gives it.
 
