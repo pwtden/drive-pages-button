@@ -2,7 +2,7 @@
 
 All notable changes are recorded here, newest first, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) style; versions follow [Semantic Versioning](https://semver.org/).
 
-## Unreleased
+## 2.1.0 - 2026-11-23
 
 Version 2.1.0 is about fewer clicks. An organisation whose pages finish their job by themselves (grant access, make the document, upload the files) and then send the person back to the file or folder can now open those pages in the tab the person is on, so they stay in one tab. The popup can be opened from the keyboard, and its buttons pressed with a key. Nothing new is asked of the browser: the permissions are still `activeTab` and `storage`.
 
