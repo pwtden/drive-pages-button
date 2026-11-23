@@ -8,6 +8,7 @@ A Manifest V3 Chrome extension: buttons, configured by the organisation's Chrome
 | --- | --- |
 | Lint and unit tests | `moon run extension:check` |
 | Real Chrome (popup and options page) | `moon run extension:chrome-check` |
+| Preview a configuration's popup | `bun scripts/preview-popup.js --config <file> --tab <address> [--out popup.png] [--own]` |
 | Package for the Chrome Web Store | `moon run extension:package` |
 
 ## Where things live

@@ -34,6 +34,16 @@ A button that breaks a rule is left out, and the options page says which one and
 
 Optionally, block every permission the extension does not have today (`blocked_permissions` in the ExtensionSettings policy). A future version that asked for more would then be refused rather than granted.
 
+### See it before you roll it out
+
+`scripts/preview-popup.js` renders the real popup with your configuration (the plain form, as in `examples/example-config.json`) on an address you name. It prints each button with the address it opens, names any setting it could not use, and saves a picture of the popup at the size Chrome gives it:
+
+```bash
+bun scripts/preview-popup.js --config your-config.json --tab "https://drive.google.com/drive/folders/<a folder id>" --out popup.png
+```
+
+Try a Drive folder, a Google Doc and any other page. `--own` previews the configuration as a person's own options-page setting instead of the policy. The exit code is 0 when the popup shows buttons and uses every setting, 1 when it does not, and 2 when it could not look.
+
 ## Develop
 
 ```bash
@@ -41,6 +51,7 @@ proto use                          # bun and moon, as pinned in .prototools
 bun install
 moon run extension:check           # Biome lint and the unit tests
 moon run extension:chrome-check    # the popup and options page in real headless Chrome
+bun scripts/preview-popup.js --config <file> --tab <address>   # your configuration's popup, as a picture
 moon run extension:package         # dist/drive-pages-button-<version>.zip and its SHA-256
 ```
 
