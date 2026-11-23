@@ -18,6 +18,10 @@
           "url": {
             "type": "string",
             "description": "An https address; it may contain {folderId} when \"folder\" or {fileId} when \"file\"."
+          },
+          "tab": {
+            "type": "string",
+            "description": "\"new\" (the default) opens the page in a new tab; \"same\" opens it in the tab the person is on."
           }
         }
       }

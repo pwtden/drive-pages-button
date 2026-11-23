@@ -17,8 +17,13 @@ A JSON object: an optional `title` and `note`, and a `buttons` list (at most 20)
 | `label` | What the button says (at most 60 characters)                                                                |
 | `when`  | `"folder"` (a Drive folder is open), `"file"` (a Doc, Sheet, Slides, Drawing or Drive file) or `"always"` |
 | `url`   | An `https` address; it may contain `{folderId}` when `"folder"`, or `{fileId}` when `"file"`                |
+| `tab`   | `"new"` (the default) opens the page in a new tab; `"same"` opens it in the tab the person is on (since 2.1) |
 
-A button that breaks a rule is left out, and the options page says which one and why. A full example is in [`examples/example-config.json`](examples/example-config.json).
+A button that breaks a rule is left out, and the options page says which one and why.
+
+**Keyboard (since 2.1):** Alt+Shift+D opens the popup (Chrome's suggested shortcut; people can change it at `chrome://extensions/shortcuts`). The first button has the focus, so Enter presses it, and the digits 1 to 9 press the button of that number, which each button shows.
+
+`"tab": "same"` suits a page that finishes by itself and then sends the person back to the file or folder: they stay in one tab. **Set it only once every Chrome has 2.1**: Chrome checks a policy against the installed version's schema, and 2.0's schema has no `tab`. A full example is in [`examples/example-config.json`](examples/example-config.json).
 
 ### By Chrome policy (Google Admin console)
 

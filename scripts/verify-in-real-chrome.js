@@ -65,6 +65,31 @@ async function main() {
       JSON.stringify(await evaluate(labels)) === JSON.stringify(["Edit this file", "Copy this file into a folder", "All our pages"]),
       "the two file buttons, then the always button",
     );
+    check(
+      (await evaluate(`document.activeElement === document.querySelector("#buttons button")`)) === true,
+      "the first button has the focus, so Enter presses it",
+    );
+    check(
+      (await evaluate(`getComputedStyle(document.querySelector("#buttons button:nth-child(2)"), "::before").content`)) === "counter(b)",
+      "each button shows its number, for the digit keys",
+    );
+    await evaluate(`document.querySelector("#buttons button").click()`);
+    await until(`window.__updated.length > 0`, "the same-tab button to navigate the tab");
+    check(
+      JSON.stringify(await evaluate(`window.__updated`)) === JSON.stringify([[7, `https://pages.example.com/edit?file=${FILE}`]]) &&
+        (await evaluate(`window.__opened.length`)) === 0,
+      'a button with "tab": "same" opens its page in the tab the person is on, and no new tab',
+    );
+
+    console.log("▶ popup, a digit key presses the button of that number");
+    await open("popup.html", { tab: `https://docs.google.com/document/d/${FILE}/edit`, managed: EXAMPLE });
+    await until(`document.querySelectorAll("#buttons button").length > 0`, "the popup's buttons");
+    await evaluate(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "2", bubbles: true }))`);
+    await until(`window.__opened.length > 0`, "the second button to open its tab");
+    check(
+      (await evaluate(`window.__opened[0]`)) === `https://pages.example.com/copy?file=${FILE}`,
+      "the key 2 pressed Copy this file into a folder, in a new tab as configured",
+    );
 
     console.log("▶ popup, a policy with one unusable button");
     const bad = { ...EXAMPLE, buttons: [...EXAMPLE.buttons, { label: "Old page", url: "http://old.example.com/" }] };

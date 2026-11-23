@@ -53,14 +53,19 @@ async function main() {
     const title = await h.evaluate(`document.getElementById("title").textContent`);
     const warn = await h.evaluate(`document.getElementById("warn").textContent`);
     const labels = await h.evaluate(`[...document.querySelectorAll("#buttons button")].map((b) => b.textContent)`);
-    // Each button's address, read by pressing it: the stand-in for chrome.tabs.create records it, nothing is opened.
+    // Each button's address, read by pressing it: the stand-ins for chrome.tabs.create and chrome.tabs.update (a "same"
+    // tab button) record it, nothing is opened.
     const opens = [];
     for (let n = 0; n < labels.length; n += 1) {
       await h.open("popup.html", args.own ? { tab: args.tab, own: config } : { tab: args.tab, managed: config });
       await h.until(`document.querySelectorAll("#buttons button").length > ${n}`);
       await h.evaluate(`document.querySelectorAll("#buttons button")[${n}].click()`);
-      await h.until(`window.__opened.length > 0 || window.__options > 0`);
-      opens.push(await h.evaluate(`window.__opened[0] || (window.__options ? "(the options page)" : "")`));
+      await h.until(`window.__opened.length > 0 || window.__updated.length > 0 || window.__options > 0`);
+      opens.push(
+        await h.evaluate(
+          `window.__opened[0] || (window.__updated[0] ? window.__updated[0][1] + " (same tab)" : "") || (window.__options ? "(the options page)" : "")`,
+        ),
+      );
     }
     // The picture is of the popup at the size Chrome gives it: shrunk to fit its content (Chrome sizes an extension popup
     // to the page's preferred width, at least the popup's own min-width), taken after one last fresh open.

@@ -101,9 +101,9 @@ export async function startChrome(dir, chromePath = DEFAULT_CHROME) {
   };
   /** Open one of the extension's pages with the Chrome APIs stood in for. */
   const open = async (file, { tab, managed = {}, own } = {}) => {
-    const stub = `window.__opened = []; window.__saved = []; window.__options = 0; window.close = () => { window.__closed = true; };
+    const stub = `window.__opened = []; window.__updated = []; window.__saved = []; window.__options = 0; window.close = () => { window.__closed = true; };
       window.chrome = {
-        tabs: { query: async () => [{ url: ${JSON.stringify(tab ?? "about:blank")} }], create: async (o) => { window.__opened.push(o.url); } },
+        tabs: { query: async () => [{ id: 7, url: ${JSON.stringify(tab ?? "about:blank")} }], create: async (o) => { window.__opened.push(o.url); }, update: async (id, o) => { window.__updated.push([id, o.url]); } },
         storage: {
           managed: { get: async () => (${JSON.stringify(managed)}) },
           sync: { get: async () => (${JSON.stringify(own === undefined ? {} : { config: own })}), set: async (o) => { window.__saved.push(o); } },

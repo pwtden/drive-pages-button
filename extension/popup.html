@@ -9,9 +9,11 @@ h1{font-size:15px;margin:0 0 8px}
 p{margin:0 0 10px;color:#4a5568;font-size:13px}
 p:empty{display:none}
 #warn{color:#b3261e}
-#buttons{display:flex;flex-direction:column;gap:6px}
+#buttons{display:flex;flex-direction:column;gap:6px;counter-reset:b}
 button{font:inherit;text-align:left;padding:9px 12px;min-height:40px;border:1px solid #0b57d0;border-radius:8px;background:#fff;color:#0b57d0;cursor:pointer}
 button:hover,button:focus{background:#e8f0fe}
+#buttons button::before{counter-increment:b;content:counter(b);display:inline-block;min-width:1.2em;margin-right:6px;color:#5f6368;font-size:12px}
+#buttons button:nth-child(n+10)::before{content:"";min-width:0;margin:0}
 </style>
 </head>
 <body>
